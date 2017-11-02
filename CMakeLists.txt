@@ -28,6 +28,7 @@ include_directories(
     third_party/freeglut/include
     third_party/libpng
     third_party/freetype/include
+    third_party/sdl2/include
     include/
 )
 
@@ -39,6 +40,7 @@ set(ALL_LIBS
     png_static
     z
     freetype
+    SDL2-static
 )
 
 aux_source_directory(src/ HWGE_SOURCES)

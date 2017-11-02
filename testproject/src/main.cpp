@@ -8,7 +8,6 @@
 #include <hwge/utils.hpp>
 #include <hwge/vboutils.hpp>
 #include <hwge/objloader.hpp>
-#include <hwge/glfw.hpp>
 #include <hwge/bmp.hpp>
 #include <hwge/png.hpp>
 #include <hwge/args.hpp>
@@ -17,11 +16,15 @@
 #include <string>
 #include <GL/glew.h>
 #include <GL/glut.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <hwge/glfw.hpp>
+#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <ctime>
 
 using namespace std;
 using namespace HWGE;
@@ -35,17 +38,40 @@ float speed = 3.0f;
 float mouseSpeed = 0.0005f;
 
 bool useControls = false;
+bool useSDL = false;
+bool useGLFW = false;
+bool useOpenGL = true;
+bool useSoftwareRenderer = false;
 
-void computeMatFromInput(GLFWwindow* window, int width, int height) {
+GLFWwindow* glfwWindow;
+SDL_Window* sdlWindow;
+SDL_Renderer* sdlRenderer;
+SDL_RendererInfo sdlRendererInfo;
+
+SDL_Surface* sdlScreen;
+
+bool sdlShouldRun = true;
+
+bool shouldRun() {
+    if(useGLFW) {
+        return !glfwWindowShouldClose(glfwWindow);
+    } else if(useSDL) {
+        return sdlShouldRun;
+    }
+
+    return false;
+}
+
+void computeMatFromInput(int width, int height) {
     static double lastTime = glfwGetTime();
 
     double currentTime = glfwGetTime();
     float deltaTime = float(currentTime - lastTime);
 
     double xPos, yPos;
-    glfwGetCursorPos(window, &xPos, &yPos);
+    glfwGetCursorPos(glfwWindow, &xPos, &yPos);
 
-    glfwSetCursorPos(window, width / 2, height / 2);
+    glfwSetCursorPos(glfwWindow, width / 2, height / 2);
 
     horizontalAngle += mouseSpeed * float(width / 2 - xPos);
     verticalAngle += mouseSpeed * float(height / 2 - yPos);
@@ -64,19 +90,19 @@ void computeMatFromInput(GLFWwindow* window, int width, int height) {
 
     glm::vec3 up = glm::cross(right, direction);
 
-    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+    if(glfwGetKey(glfwWindow, GLFW_KEY_UP) == GLFW_PRESS) {
         position += direction * deltaTime * speed;
     }
 
-    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    if(glfwGetKey(glfwWindow, GLFW_KEY_DOWN) == GLFW_PRESS) {
         position -= direction * deltaTime * speed;
     }
 
-    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    if(glfwGetKey(glfwWindow, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         position += right * deltaTime * speed;
     }
 
-    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    if(glfwGetKey(glfwWindow, GLFW_KEY_LEFT) == GLFW_PRESS) {
         position -= right * deltaTime * speed;
     }
 
@@ -92,6 +118,21 @@ void computeMatFromInput(GLFWwindow* window, int width, int height) {
     lastTime = currentTime;
 }
 
+void handleSDLEvent(const SDL_Event &event) {
+    switch(event.type) {
+        default:
+            break;
+        case SDL_QUIT:
+            sdlShouldRun = false;
+            break;
+    }
+}
+
+int getTime() {
+    time_t result = time(nullptr);
+    return result;
+}
+
 int main(int argc, char** argv) {
     HWGE::Args args(argc, argv);
     HWGE::init();
@@ -100,19 +141,50 @@ int main(int argc, char** argv) {
         useControls = true;
     }
 
-    if(!GLFW::init()) return HWGE_STATUS_ERROR;
+    if(args.hasOption("--sdl2")) {
+        useSDL = true;
+        useGLFW = false;
+    } else {
+        useSDL = false;
+        useGLFW = true;
+    }
 
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    if(args.hasOption("--software-render") && useSDL) {
+        useSoftwareRenderer = true;
+        useOpenGL = false;
+    }
+    
     int width = 800;
     int height = 600;
+    string windowTitle = "HWGE Version: " + HWGE::version();
 
-    GLFWwindow* window = GLFW::createWindow(width, height, "HWGE Version: " + HWGE::version());
-    glfwMakeContextCurrent(window);
+    if(useGLFW) {
+        if(!GLFW::init()) return HWGE_STATUS_ERROR;
+
+        glfwWindowHint(GLFW_SAMPLES, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
+        glfwWindow = GLFW::createWindow(width, height, windowTitle);
+        glfwMakeContextCurrent(glfwWindow);
+
+        glfwPollEvents();
+        glfwSetCursorPos(glfwWindow, width / 2, height / 2);
+
+        glfwSetInputMode(glfwWindow, GLFW_STICKY_KEYS, GL_TRUE);
+        if(useControls) glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    } else if(useSDL && useOpenGL) {
+        SDL_Init(SDL_INIT_VIDEO);
+        SDL_CreateWindowAndRenderer(width, height, SDL_WINDOW_OPENGL, &sdlWindow, &sdlRenderer);
+        SDL_GetRendererInfo(sdlRenderer, &sdlRendererInfo);
+    } else if(useSoftwareRenderer) {
+        SDL_Init(SDL_INIT_VIDEO);
+        sdlWindow = SDL_CreateWindow(windowTitle.c_str(), 100, 100, width, height, 0);
+        sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_SOFTWARE);
+        SDL_GetRendererInfo(sdlRenderer, &sdlRendererInfo);
+    }
 
     if(!GLEW::init()) return HWGE_STATUS_ERROR;
 
@@ -120,20 +192,29 @@ int main(int argc, char** argv) {
     char *glutArgv[1] = { (char*)"Something" };
     glutInit(&glutArgc, glutArgv);
 
-    Utils::displayOpenGLVersions();
+    if(useGLFW) {
+        const GLubyte* renderer = glGetString(GL_RENDERER);
+        const GLubyte* version = glGetString(GL_VERSION);
+        
+        printf("OpenGL Renderer: %s\n", renderer);
+        printf("OpenGL Version: %s\n", version);
+    } else if(useSDL && useOpenGL) {
+        const char* sdlRendererName = sdlRendererInfo.name;
+        const GLubyte* renderer = glGetString(GL_RENDERER);
+        const GLubyte* version = glGetString(GL_VERSION);
+        
+        printf("SDL Renderer: %s\n", sdlRendererName);
+        printf("OpenGL Renderer: %s\n", renderer);
+        printf("OpenGL Version: %s\n", version);
+    } else if(useSoftwareRenderer) {
+        const char* sdlRendererName = sdlRendererInfo.name;
+        
+        printf("SDL Renderer: %s\n", sdlRendererName);
+    }
 
     glViewport(0, 0, width, height);
 
-    glfwPollEvents();
-    glfwSetCursorPos(window, width / 2, height / 2);
-
     glClearColor(0.0f, 0.75f, 1.0f, 0.0f);
-
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    if(useControls) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    //glfwPollEvents();
-    //glfwSetCursorPos(window, width / 2, height / 2);
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -200,19 +281,27 @@ int main(int argc, char** argv) {
     glUniformMatrix4fv(textShader.getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(projection));
     Graphics::Text2D text2d("assets/fonts/opensans.ttf", width, height);
 
-    double lastTime = glfwGetTime();
+    // TODO: Get time without GLFW
+    int lastTime = getTime();
     int nbFrames = 0;
 
     string fpsText = "FPS: ";
     cout << "Starting game loop..." << endl;
     do {
         char* tmpText;
-        double currentTime = glfwGetTime();
+        int currentTime = getTime();
         nbFrames++;
-        if(currentTime - lastTime >= 1.0) {
+        if(currentTime - lastTime >= 1) {
             fpsText = "FPS: " + to_string(nbFrames);
             nbFrames = 0;
             lastTime = currentTime;
+        }
+
+        if(useSDL) {
+            SDL_Event sdlEvent;
+            while(SDL_PollEvent(&sdlEvent)) {
+                handleSDLEvent(sdlEvent);
+            }
         }
 
         glEnable(GL_BLEND);
@@ -221,12 +310,8 @@ int main(int argc, char** argv) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //glBindVertexArray(vao);
-
-        //glUseProgram(programID);
-
         if(useControls) {
-            computeMatFromInput(window, width, height);
+            computeMatFromInput(width, height);
         } else {
             viewMatrix = glm::lookAt(
                 glm::vec3(4, 3, 3),
@@ -251,7 +336,7 @@ int main(int argc, char** argv) {
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform1i(textureID, 0);
+        glUniform1i(textureID, 0);https://duckduckgo.com/?q=sdl+software+renderer&t=ffab&atb=v89-1_b&ia=web
 
         // Start draw
 
@@ -283,9 +368,13 @@ int main(int argc, char** argv) {
         text2d.renderText(textShader, fpsText, 25.0f, 25.0f, 1.0f, glm::vec3(0.5f, 0.8f, 0.2f));
         glEnable(GL_DEPTH_TEST);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    } while(!glfwWindowShouldClose(window));
+        if(useGLFW) {
+            glfwSwapBuffers(glfwWindow);
+            glfwPollEvents();
+        } else if(useSDL) {
+            SDL_RenderPresent(sdlRenderer);
+        }
+    } while(shouldRun());
 
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &uvbo);
@@ -294,6 +383,11 @@ int main(int argc, char** argv) {
     glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vao);
 
-    glfwTerminate();
+    if(useGLFW) {
+        glfwTerminate();
+    } else if(useSDL) {
+        SDL_Quit();
+    }
+
     return HWGE_STATUS_OK;
 }

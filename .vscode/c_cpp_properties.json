@@ -28,7 +28,14 @@
             "includePath": [
                 "/usr/include",
                 "/usr/local/include",
-                "${workspaceRoot}"
+                "${workspaceRoot}",
+                "${workspaceRoot}/include",
+                "${workspaceRoot}/third_party/glfw/include",
+                "${workspaceRoot}/third_party/glm",
+                "${workspaceRoot}/third_party/glew/include",
+                "${workspaceRoot}/third_party/freeglut/include",
+                "${workspaceRoot}/third_party/freetype/include",
+                "${workspaceRoot}/third_party/libpng"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",

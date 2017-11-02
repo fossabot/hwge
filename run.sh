@@ -5,5 +5,5 @@ cmake -G "Unix Makefiles" ..
 make
 cd ..
 cd testproject
-../bin/testproject
+../bin/testproject $@
 cd ..

@@ -11,6 +11,10 @@ find_package(OpenGL REQUIRED)
 
 include_directories(${OPENGL_INCLUDE_DIR})
 
+# SDL2
+add_subdirectory(sdl2)
+include_directories(sdl2/include)
+
 # GLFW
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
