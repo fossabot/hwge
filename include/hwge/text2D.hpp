@@ -20,12 +20,11 @@ namespace HWGE {
             std::map<GLchar, Character> characters;
             GLuint vao, vbo;
             glm::mat4 projection;
-            HWGE::Graphics::Shader& shader;
             int windowWidth, windowHeight;
         
         public:
-            Text2D(HWGE::Graphics::Shader& shader, std::string filename, int windowWidth, int windowHeight);
-            void renderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
+            Text2D(std::string filename, int windowWidth, int windowHeight);
+            void renderText(HWGE::Graphics::Shader& shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
         };
         /*class Text2D {
         private:

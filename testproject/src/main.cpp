@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
     glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
     textShader.use();
     glUniformMatrix4fv(glGetUniformLocation(textShader.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-    Graphics::Text2D text2d(textShader, "assets/fonts/opensans.ttf", width, height);
+    Graphics::Text2D text2d("assets/fonts/opensans.ttf", width, height);
 
     double lastTime = glfwGetTime();
     int nbFrames = 0;
@@ -280,7 +280,7 @@ int main(int argc, char** argv) {
         // End Draw
 
         glDisable(GL_DEPTH_TEST);
-        text2d.renderText(fpsText, 25.0f, 25.0f, 1.0f, glm::vec3(0.5f, 0.8f, 0.2f));
+        text2d.renderText(textShader, fpsText, 25.0f, 25.0f, 1.0f, glm::vec3(0.5f, 0.8f, 0.2f));
         glEnable(GL_DEPTH_TEST);
 
         glfwSwapBuffers(window);

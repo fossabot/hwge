@@ -14,10 +14,9 @@
 #include <hwge/shader.hpp>
 #include FT_FREETYPE_H
 
-HWGE::Graphics::Text2D::Text2D(HWGE::Graphics::Shader& shader, std::string filename, int windowWidth, int windowHeight) {
+HWGE::Graphics::Text2D::Text2D(std::string filename, int windowWidth, int windowHeight) {
     this->windowWidth = windowWidth;
     this->windowHeight = windowHeight;
-    this->shader = shader;
 
     FT_Library ft;
     if(FT_Init_FreeType(&ft)) {
@@ -84,10 +83,10 @@ HWGE::Graphics::Text2D::Text2D(HWGE::Graphics::Shader& shader, std::string filen
     glBindVertexArray(0);
 }
 
-void HWGE::Graphics::Text2D::renderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color) {
-    shader->use();
+void HWGE::Graphics::Text2D::renderText(HWGE::Graphics::Shader& shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color) {
+    shader.use();
 
-    glUniform3f(glGetUniformLocation(shader->getID(), "textColor"), color.x, color.y, color.z);
+    glUniform3f(glGetUniformLocation(shader.getID(), "textColor"), color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
