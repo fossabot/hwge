@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
     textShader.load();
     glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
     textShader.use();
-    glUniformMatrix4fv(glGetUniformLocation(textShader.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(textShader.getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(projection));
     Graphics::Text2D text2d("assets/fonts/opensans.ttf", width, height);
 
     double lastTime = glfwGetTime();
