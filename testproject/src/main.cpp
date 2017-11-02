@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <hwge/hwge.hpp>
 #include <hwge/status_codes.hpp>
-#include <hwge/shader_utils.hpp>
+#include <hwge/shader.hpp>
 #include <hwge/glew.hpp>
 #include <hwge/utils.hpp>
 #include <hwge/vboutils.hpp>
@@ -145,16 +145,17 @@ int main(int argc, char** argv) {
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    GLuint programID = ShaderUtils::load("assets/shaders/tex.vs", "assets/shaders/tex_transparent.fs");
+    Graphics::Shader shader("assets/shaders/tex.vs", "assets/shaders/tex_transparent.fs");
+    shader.load();
     
-    GLuint matrixID = glGetUniformLocation(programID, "MVP");
-    GLuint viewMatrixID = glGetUniformLocation(programID, "V");
-    GLuint modelMatrixID = glGetUniformLocation(programID, "M");
+    GLuint matrixID = shader.getUniformLocation("MVP");
+    GLuint viewMatrixID = shader.getUniformLocation("V");
+    GLuint modelMatrixID = shader.getUniformLocation("M");
+    GLuint textureID = shader.getUniformLocation("texSampler");
+    GLuint lightID = shader.getUniformLocation("lightPos");
 
     Image::PNG png("assets/textures/thing.png");
     GLuint texture = png.load();
-
-    GLuint textureID = glGetUniformLocation(programID, "texSampler");
     
     vector<glm::vec3> vertices;
     vector<glm::vec2> uvs;
@@ -192,13 +193,11 @@ int main(int argc, char** argv) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
 
-    glUseProgram(programID);
-    GLuint lightID = glGetUniformLocation(programID, "lightPos");
-
-    GLuint textShader = HWGE::ShaderUtils::load("assets/shaders/text2d.vs", "assets/shaders/text2d.fs");
+    Graphics::Shader textShader("assets/shaders/text2d.vs", "assets/shaders/text2d.fs");
+    textShader.load();
     glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
-    glUseProgram(textShader);
-    glUniformMatrix4fv(glGetUniformLocation(textShader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    textShader.use();
+    glUniformMatrix4fv(glGetUniformLocation(textShader.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     Graphics::Text2D text2d(textShader, "assets/fonts/opensans.ttf", width, height);
 
     double lastTime = glfwGetTime();
@@ -222,9 +221,9 @@ int main(int argc, char** argv) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glBindVertexArray(vao);
+        //glBindVertexArray(vao);
 
-        glUseProgram(programID);
+        //glUseProgram(programID);
 
         if(useControls) {
             computeMatFromInput(window, width, height);
@@ -241,7 +240,7 @@ int main(int argc, char** argv) {
         glm::mat4 mvp = projectionMatrix * viewMatrix * modelMatrix;
 
         glBindVertexArray(vao);
-        glUseProgram(programID);
+        shader.use();
 
         glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
         glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &modelMatrix[0][0]);
@@ -291,7 +290,7 @@ int main(int argc, char** argv) {
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &uvbo);
     glDeleteBuffers(1, &nbo);
-    glDeleteProgram(programID);
+    shader.deleteShader();
     glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vao);
 

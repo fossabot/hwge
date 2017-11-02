@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <map>
+#include <hwge/shader.hpp>
 
 namespace HWGE {
     namespace Graphics {
@@ -19,11 +20,11 @@ namespace HWGE {
             std::map<GLchar, Character> characters;
             GLuint vao, vbo;
             glm::mat4 projection;
-            GLuint shader;
+            HWGE::Graphics::Shader& shader;
             int windowWidth, windowHeight;
         
         public:
-            Text2D(GLuint shader, std::string filename, int windowWidth, int windowHeight);
+            Text2D(HWGE::Graphics::Shader& shader, std::string filename, int windowWidth, int windowHeight);
             void renderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
         };
         /*class Text2D {

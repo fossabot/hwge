@@ -11,9 +11,10 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <hwge/shader.hpp>
 #include FT_FREETYPE_H
 
-HWGE::Graphics::Text2D::Text2D(GLuint shader, std::string filename, int windowWidth, int windowHeight) {
+HWGE::Graphics::Text2D::Text2D(HWGE::Graphics::Shader& shader, std::string filename, int windowWidth, int windowHeight) {
     this->windowWidth = windowWidth;
     this->windowHeight = windowHeight;
     this->shader = shader;
@@ -84,9 +85,9 @@ HWGE::Graphics::Text2D::Text2D(GLuint shader, std::string filename, int windowWi
 }
 
 void HWGE::Graphics::Text2D::renderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color) {
-    glUseProgram(shader);
+    shader->use();
 
-    glUniform3f(glGetUniformLocation(shader, "textColor"), color.x, color.y, color.z);
+    glUniform3f(glGetUniformLocation(shader->getID(), "textColor"), color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
