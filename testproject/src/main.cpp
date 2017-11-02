@@ -271,9 +271,6 @@ int main(int argc, char** argv) {
         glBindBuffer(GL_ARRAY_BUFFER, nbo);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0);
 
-        // draw the triangle
-        //glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, (void*) 0);
@@ -291,7 +288,12 @@ int main(int argc, char** argv) {
         glfwPollEvents();
     } while(!glfwWindowShouldClose(window));
 
-    //glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &uvbo);
+    glDeleteBuffers(1, &nbo);
+    glDeleteProgram(programID);
+    glDeleteTextures(1, &texture);
+    glDeleteVertexArrays(1, &vao);
 
     glfwTerminate();
     return HWGE_STATUS_OK;
