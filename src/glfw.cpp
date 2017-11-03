@@ -1,3 +1,5 @@
+#if HWGE_USE_GLFW
+
 #include <hwge/glfw.hpp>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
@@ -23,3 +25,5 @@ GLFWwindow* HWGE::GLFW::createWindow(int width, int height, std::string title) {
 
     return win;
 }
+
+#endif

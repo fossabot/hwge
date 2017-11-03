@@ -12,7 +12,10 @@ find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
 # SDL2
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+#set(SDL_DYNAMIC_API 0)
+#set(SDL_JOYSTICK OFF CACHE BOOL "" FORCE) # Atleast for now SDL2 will not have joystick support
+#set(SDL_HAPTIC OFF CACHE BOOL "" FORCE) # Atleast for now SDL2 will not have joystick support
+#set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 add_subdirectory(sdl2)
 include_directories(sdl2/include)
 

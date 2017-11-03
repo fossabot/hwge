@@ -1,22 +1,29 @@
+#if HWGE_USE_GLFW
 #include <GLFW/glfw3.h>
+#elif HWGE_USE_SDL
 #include <SDL.h> // TODO: Fix the SDL include dirs.
+#endif
 #include <hwge/input.hpp>
 #include <hwge/keycodes.hpp>
 
+bool hwgeKeys[1024];
+
+#if HWGE_USE_SDL
 // Should only be used by the engine, do not use this function.
 void hwgeInputHandleSDL(const SDL_Event &event) {
+    int key = HWGE::Input::sdlToHWGEKey(event.key.keysym.sym);
     switch(event.type) {
         default:
             break;
         case SDL_KEYDOWN:
-            HWGE::Input::keys[HWGE::Input::sdlToHWGEKey(event.key.keysym.sym)] = true;
+            hwgeKeys[key] = true;
             break;
         case SDL_KEYUP:
-            HWGE::Input::keys[HWGE::Input::sdlToHWGEKey(event.key.keysym.sym)] = false;
+            hwgeKeys[key] = false;
             break;
     }
 }
-
+#elif HWGE_USE_GLFW
 // Should only be used by the engine, do not use this function.
 void hwgeInputHandleGLFW(GLFWwindow* window, int key, int scancode, int action, int mods) {
     int keyTmp = HWGE::Input::glfwToHWGEKey(key);
@@ -25,18 +32,20 @@ void hwgeInputHandleGLFW(GLFWwindow* window, int key, int scancode, int action, 
         default:
             break;
         case GLFW_PRESS:
-            HWGE::Input::keys[keyTmp] = true;
+            hwgeKeys[keyTmp] = true;
             break;
         case GLFW_RELEASE:
-            HWGE::Input::keys[keyTmp] = false;
+            hwgeKeys[keyTmp] = false;
             break;
     }
 }
+#endif
 
 bool HWGE::Input::getKey(int key) {
-    return HWGE::Input::keys[key];
+    return hwgeKeys[key];
 }
 
+#if HWGE_USE_SDL
 // TODO: Add all keys from https://wiki.libsdl.org/SDLKeycodeLookup
 int HWGE::Input::sdlToHWGEKey(int key) {
     switch(key) {
@@ -174,8 +183,9 @@ int HWGE::Input::sdlToHWGEKey(int key) {
 
     return key;
 }
-
+#elif HWGE_USE_GLFW
 // Not needed but just for it having the same syntax as for sdl
 int HWGE::Input::glfwToHWGEKey(int key) {
     return key;
 }
+#endif

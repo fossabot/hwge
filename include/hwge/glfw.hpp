@@ -1,3 +1,5 @@
+#if HWGE_USE_GLFW
+
 #pragma once
 
 #include <GLFW/glfw3.h>
@@ -9,3 +11,5 @@ namespace HWGE {
         GLFWwindow* createWindow(int width, int height, std::string title);
     };
 };
+
+#endif

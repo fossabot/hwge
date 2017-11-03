@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(hwge)
 
+option(USE_GLFW "use glfw" ON)
+option(USE_SDL "use sdl" OFF)
+
 set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
@@ -34,14 +37,34 @@ include_directories(
 
 set(ALL_LIBS
     ${OPENGL_gl_LIBRARY}
-    glfw
     glew
     freeglut_static
     png_static
     z
     freetype
-    SDL2-static
 )
+
+if(WIN32)
+    set(
+        ${ALL_LIBS}
+        mingw32
+    )
+endif()
+
+if(USE_GLFW)
+    add_definitions(-DHWGE_USE_GLFW)
+    set(ALL_LIBS
+        ${ALL_LIBS}
+        glfw
+    )
+elseif(USE_SDL)
+    add_definitions(-DHWGE_USE_SDL)
+    set(ALL_LIBS
+        ${ALL_LIBS}
+        SDL2main
+        SDL2-static
+    )
+endif()
 
 aux_source_directory(src/ HWGE_SOURCES)
 aux_source_directory(include/ HWGE_INCLUDES)
