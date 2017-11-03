@@ -12,6 +12,7 @@ find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
 # SDL2
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 add_subdirectory(sdl2)
 include_directories(sdl2/include)
 

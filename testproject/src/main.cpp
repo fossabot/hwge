@@ -22,9 +22,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <hwge/glfw.hpp>
 #include <GLFW/glfw3.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
+#include <SDL.h> // TODO: Fix the SDL include dirs.
+#include <SDL_opengl.h> // TODO: Fix the SDL include dirs.
 #include <ctime>
+#include <hwge/input.hpp>
+#include <hwge/keycodes.hpp>
 
 using namespace std;
 using namespace HWGE;
@@ -90,19 +92,19 @@ void computeMatFromInput(int width, int height) {
 
     glm::vec3 up = glm::cross(right, direction);
 
-    if(glfwGetKey(glfwWindow, GLFW_KEY_UP) == GLFW_PRESS) {
+    if(Input::getKey(HWGE_KEY_DOWN)) {
         position += direction * deltaTime * speed;
     }
 
-    if(glfwGetKey(glfwWindow, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    if(Input::getKey(HWGE_KEY_UP)) {
         position -= direction * deltaTime * speed;
     }
 
-    if(glfwGetKey(glfwWindow, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    if(Input::getKey(HWGE_KEY_RIGHT)) {
         position += right * deltaTime * speed;
     }
 
-    if(glfwGetKey(glfwWindow, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    if(Input::getKey(HWGE_KEY_LEFT)) {
         position -= right * deltaTime * speed;
     }
 
@@ -124,6 +126,12 @@ void handleSDLEvent(const SDL_Event &event) {
             break;
         case SDL_QUIT:
             sdlShouldRun = false;
+            break;
+        case SDL_KEYDOWN:
+            hwgeInputHandleSDL(event);
+            break;
+        case SDL_KEYUP:
+            hwgeInputHandleSDL(event);
             break;
     }
 }
@@ -169,6 +177,8 @@ int main(int argc, char** argv) {
     
         glfwWindow = GLFW::createWindow(width, height, windowTitle);
         glfwMakeContextCurrent(glfwWindow);
+
+        glfwSetKeyCallback(glfwWindow, hwgeInputHandleGLFW);
 
         glfwPollEvents();
         glfwSetCursorPos(glfwWindow, width / 2, height / 2);
