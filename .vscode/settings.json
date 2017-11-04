@@ -41,5 +41,7 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "utility": "cpp"
-    }
+    },
+    "git.ignoreLimitWarning": true,
+    "files.eol": "\n"
 }
